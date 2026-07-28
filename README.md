@@ -67,8 +67,8 @@ CRYSTELF_ZWA=true
 CRYSTELF_60S_URL=https://60s.crystelf.top
 # 手性碳验证 API
 CRYSTELF_AUTH_URL=https://carbon.crystelf.top
-# 早晚安随机图片 API
-CRYSTELF_IMAGE_API=https://uapis.cn/api/v1/random/image?category=acg&type=pc
+# 早晚安随机图片 API（默认 pc_wallpaper 壁纸分类，尺度更安全）
+CRYSTELF_IMAGE_API=https://uapis.cn/api/v1/random/image?category=pc_wallpaper
 # 戳一戳回戳概率（0~1）
 CRYSTELF_REPLY_POKE=0.4
 ```
