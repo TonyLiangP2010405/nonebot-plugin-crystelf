@@ -45,9 +45,10 @@ async def handle_night(event: MessageEvent):
         else:
             try:
                 text = words.get_word("MN-hello", "good-night", _nickname())
-                await night_cmd.finish(Message(text + MessageSegment.image(_image_api())))
             except Exception as e:
                 logger.error(f"[crystelf] 早晚安出现错误: {e}")
+                return
+            await night_cmd.finish(Message(text + MessageSegment.image(_image_api())))
     elif 3 <= hour < 7:
         if is_master(event.user_id):
             await night_cmd.finish(_pick(words.word7_list) + MessageSegment.image(_image_api()))
@@ -72,9 +73,10 @@ async def handle_morning(event: MessageEvent):
         else:
             try:
                 text = words.get_word("MN-hello", "good-morning", _nickname())
-                await morning_cmd.finish(Message(text + MessageSegment.image(_image_api())))
             except Exception as e:
                 logger.error(f"[crystelf] 早晚安出现错误: {e}")
+                return
+            await morning_cmd.finish(Message(text + MessageSegment.image(_image_api())))
     elif 12 <= hour <= 18:
         if is_master(event.user_id):
             await morning_cmd.finish(Message(_pick(words.word10_list) + MessageSegment.image(_image_api())))
