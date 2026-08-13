@@ -33,8 +33,8 @@ def test_words_pick_and_params():
     assert isinstance(word, str) and word
 
     # 名字替换逻辑
-    assert words._apply_params("{name}真可爱", name="鸡气人") == "鸡气人真可爱"
-    assert words._apply_params("真寻不知道哦", name="鸡气人") == "鸡气人不知道哦"
+    assert words._apply_params("{name}真可爱", name="馒头") == "馒头真可爱"
+    assert words._apply_params("馒头不知道哦", name="鸡气人") == "鸡气人不知道哦"
     assert words._apply_params("没有名字") == "没有名字"
 
     # 早晚安词库可读

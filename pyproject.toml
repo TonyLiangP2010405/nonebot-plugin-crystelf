@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-crystelf"
-version = "0.1.2"
+version = "0.1.3"
 description = "移植自 crystelf-plugin 的多功能群娱乐插件：60s 早报、新人验证、入群欢迎、表情回应、戳一戳、早晚安"
 readme = "README.md"
 license = { text = "MIT" }

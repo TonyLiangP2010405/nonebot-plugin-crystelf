@@ -51,7 +51,7 @@ poetry add nonebot-plugin-crystelf
 
 ```env
 # 机器人昵称（用于戳一戳等文案中的名字替换）
-CRYSTELF_NICKNAME=鸡气人
+CRYSTELF_NICKNAME=馒头
 # 数据存储路径
 CRYSTELF_DATA_PATH=data/crystelf
 

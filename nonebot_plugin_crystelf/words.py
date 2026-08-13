@@ -93,7 +93,7 @@ def _read_word_file(word_type: str, name: str) -> list[str]:
     return data
 
 
-def _apply_params(text: str, name: Optional[str] = None, default_name: str = "真寻") -> str:
+def _apply_params(text: str, name: Optional[str] = None, default_name: str = "馒头") -> str:
     """与原项目 applyParams 一致：替换默认名与 {name} 占位"""
     if not name:
         return text

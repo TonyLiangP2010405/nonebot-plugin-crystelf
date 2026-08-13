@@ -5,7 +5,7 @@ class Config(BaseModel):
     """crystelf 插件配置"""
 
     # 机器人昵称（用于戳一戳等文案中的名字替换）
-    crystelf_nickname: str = "鸡气人"
+    crystelf_nickname: str = "馒头"
     # 数据存储路径
     crystelf_data_path: str = "data/crystelf"
 
