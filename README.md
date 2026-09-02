@@ -21,7 +21,7 @@ _✨ 移植自 [crystelf-plugin](https://github.com/Jerryplusy/crystelf-plugin) 
 - **自定义入群欢迎**：按群设置欢迎文案与欢迎图片，可与入群验证联动（验证通过后发送）
 - **表情回应**：自动给群消息中的 QQ 表情 / emoji 贴上表情回应（需 NapCat 等支持扩展 API 的协议端）
 - **戳一戳**：戳 bot 随机回复并按概率回戳；戳主人会被警告并回戳；主人戳人时 bot 跟着戳
-- **早晚安**：早晚安关键词按时段随机回复，主人有专属词库，附随机图片
+- **早晚安**：早晚安关键词按时段随机回复，主人有专属词库
 
 > 移植范围说明：原项目的「晶灵智能 AI 对话」「点歌」「RSS 订阅」功能不在本插件范围内。
 
@@ -67,8 +67,6 @@ CRYSTELF_ZWA=true
 CRYSTELF_60S_URL=https://60s.crystelf.top
 # 手性碳验证 API
 CRYSTELF_AUTH_URL=https://carbon.crystelf.top
-# 早晚安随机图片 API（默认 pc_wallpaper 壁纸分类，尺度更安全）
-CRYSTELF_IMAGE_API=https://uapis.cn/api/v1/random/image?category=pc_wallpaper
 # 戳一戳回戳概率（0~1）
 CRYSTELF_REPLY_POKE=0.4
 ```

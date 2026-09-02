@@ -1,5 +1,5 @@
 from nonebot import on_regex
-from nonebot.adapters.onebot.v11 import Message, MessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.log import logger
 from nonebot.plugin import get_plugin_config
 
@@ -20,10 +20,6 @@ morning_cmd = on_regex(
 )
 
 
-def _image_api() -> str:
-    return get_plugin_config(Config).crystelf_image_api
-
-
 def _nickname() -> str:
     return get_plugin_config(Config).crystelf_nickname
 
@@ -41,17 +37,17 @@ async def handle_night(event: MessageEvent):
     hour = datetime.datetime.now().hour
     if (20 <= hour <= 23) or (0 <= hour <= 2):
         if is_master(event.user_id):
-            await night_cmd.finish(Message(_pick(words.word2_list) + MessageSegment.image(_image_api())))
+            await night_cmd.finish(_pick(words.word2_list))
         else:
             try:
                 text = words.get_word("MN-hello", "good-night", _nickname())
             except Exception as e:
                 logger.error(f"[crystelf] 早晚安出现错误: {e}")
                 return
-            await night_cmd.finish(Message(text + MessageSegment.image(_image_api())))
+            await night_cmd.finish(text)
     elif 3 <= hour < 7:
         if is_master(event.user_id):
-            await night_cmd.finish(_pick(words.word7_list) + MessageSegment.image(_image_api()))
+            await night_cmd.finish(_pick(words.word7_list))
         else:
             await night_cmd.finish(_pick(words.word8_list))
     else:
@@ -69,17 +65,17 @@ async def handle_morning(event: MessageEvent):
         await morning_cmd.finish(_pick(words.word4_list))
     elif 5 <= hour <= 11:
         if is_master(event.user_id):
-            await morning_cmd.finish(Message(_pick(words.word3_list) + MessageSegment.image(_image_api())))
+            await morning_cmd.finish(_pick(words.word3_list))
         else:
             try:
                 text = words.get_word("MN-hello", "good-morning", _nickname())
             except Exception as e:
                 logger.error(f"[crystelf] 早晚安出现错误: {e}")
                 return
-            await morning_cmd.finish(Message(text + MessageSegment.image(_image_api())))
+            await morning_cmd.finish(text)
     elif 12 <= hour <= 18:
         if is_master(event.user_id):
-            await morning_cmd.finish(Message(_pick(words.word10_list) + MessageSegment.image(_image_api())))
+            await morning_cmd.finish(_pick(words.word10_list))
         else:
             await morning_cmd.finish(_pick(words.word5_list))
     else:
