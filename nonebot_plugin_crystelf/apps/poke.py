@@ -15,27 +15,71 @@ from ..utils import group_poke, is_master
 poke_notice = on_notice(priority=10, block=False)
 
 async def _mantou_poke_text(event: PokeNotifyEvent) -> str | None:
-    """记录戳一戳并返回与关系阶段相符的回复。"""
+    """戳一戳回复：先由好感插件接管，再回退旧版联动逻辑，都不可用时交给本地词库。"""
     if get_plugin_by_module_name("nonebot_plugin_mantou_affection") is None:
         return None
-    try:
-        from nonebot_plugin_mantou_affection import add_affection, get_affection_response
+    text = await _mantou_poke_via_api(event)
+    if text is None:
+        text = await _mantou_poke_via_legacy_api(event)
+    return text
 
-        await add_affection(
-            event.group_id,
-            event.user_id,
-            1,
-            source="nonebot_plugin_crystelf:poke",
+
+async def _mantou_poke_via_api(event: PokeNotifyEvent) -> str | None:
+    """新版好感插件：好感增减、不耐烦累进和回复文案都由它决定。"""
+    try:
+        import nonebot_plugin_mantou_affection as affection
+
+        poke_api = getattr(affection, "poke", None)
+        if poke_api is None:
+            return None
+        result = await poke_api(event.group_id, event.user_id, nickname="")
+    except Exception as error:
+        logger.debug(f"[crystelf] 馒头好感度戳一戳接口调用失败: {error}")
+        return None
+    return _clean_text(result.text)
+
+
+async def _mantou_poke_via_legacy_api(event: PokeNotifyEvent) -> str | None:
+    """旧版好感插件：由本插件 roll 正负分支并挑选文案场景。"""
+    negative = random.random() < get_plugin_config(Config).crystelf_poke_negative_chance
+    try:
+        from nonebot_plugin_mantou_affection import (
+            add_affection,
+            change_affection,
+            get_affection_response,
         )
+
+        if negative:
+            await change_affection(
+                event.group_id,
+                event.user_id,
+                -1,
+                source="nonebot_plugin_crystelf:poke",
+            )
+            scene = "crystelf.poke.negative"
+        else:
+            await add_affection(
+                event.group_id,
+                event.user_id,
+                1,
+                source="nonebot_plugin_crystelf:poke",
+            )
+            scene = "crystelf.poke"
         response = await get_affection_response(
-            "crystelf.poke",
+            scene,
             event.group_id,
             event.user_id,
         )
     except Exception as error:
         logger.debug(f"[crystelf] 馒头好感度联动失败: {error}")
         return None
-    return response.text
+    return _clean_text(response.text)
+
+
+def _clean_text(text: str | None) -> str | None:
+    """统一清理回复文案，空文本视为没有回复"""
+    cleaned = (text or "").strip()
+    return cleaned or None
 
 
 @poke_notice.handle()

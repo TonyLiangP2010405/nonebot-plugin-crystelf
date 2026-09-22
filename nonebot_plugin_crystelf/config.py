@@ -23,3 +23,5 @@ class Config(BaseModel):
     crystelf_auth_url: str = "https://carbon.crystelf.top"
     # 戳一戳回戳概率
     crystelf_reply_poke: float = 0.4
+    # 戳一戳惹馒头不高兴（倒扣好感）的概率（0~1），仅旧版好感插件（无 poke 接口）生效
+    crystelf_poke_negative_chance: float = 0.1
