@@ -135,6 +135,12 @@ CRYSTELF_REPLY_POKE=0.4
 机器人：被戳晕了……轻一点啦！
 ```
 
+### 馒头好感度联动（可选）
+
+同时加载 `nonebot-plugin-mantou-affection` 后，群友戳 bot 会按联动冷却增加 1 点馒头好感，
+并依据当前关系阶段切换从熟悉到暧昧的回复。文案来自好感插件文案库的 `crystelf.poke` 场景，
+可通过 `MANTOU_AFFECTION_TEXT_PATH` 扩充到大量文案；未加载好感度插件时仍使用原有戳一戳词库。
+
 ## 与原项目的对应关系
 
 | 原项目功能 (Yunzai) | 本插件实现位置 | 是否完成 | 备注 |
