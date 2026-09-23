@@ -69,7 +69,7 @@ CRYSTELF_60S_URL=https://60s.crystelf.top
 CRYSTELF_AUTH_URL=https://carbon.crystelf.top
 # 戳一戳回戳概率（0~1）
 CRYSTELF_REPLY_POKE=0.4
-# 戳一戳惹馒头不高兴（倒扣 1 点好感）的概率（0~1），仅旧版好感插件生效
+# 戳一戳惹馒头不高兴（倒扣 1 点好感）的概率（0~1），仅没有 poke 接口的旧版好感插件生效
 CRYSTELF_POKE_NEGATIVE_CHANCE=0.1
 ```
 
@@ -139,19 +139,20 @@ CRYSTELF_POKE_NEGATIVE_CHANCE=0.1
 
 ### 馒头好感度联动（可选）
 
-同时加载 `nonebot-plugin-mantou-affection` 后，群友戳 bot 的判定交给好感插件：加好感还是扣好感、
-扣多少、回哪句文案都由它决定，本插件只负责把 `poke()` 返回的文案发出去。判定是累进的——
-当天戳得越多越容易扣，扣得也越多，戳满一定次数后馒头会进入「无语」阶段，理都不想理你。
-用到的文案来自好感插件文案库的 `crystelf.poke` / `crystelf.poke.negative` 场景，
-可通过 `MANTOU_AFFECTION_TEXT_PATH` 扩充到大量文案。
+同时加载 `nonebot-plugin-mantou-affection` 后，群友戳 bot 的判定交给好感插件：好感加多少、回哪句文案、
+要不要戳出一道限时答题都由它决定，本插件只负责把 `poke()` 返回的文案发出去。戳一戳不再有扣分机制，
+固定 +1（仍受好感插件的每日获取上限约束）；另有约 1% 概率戳出一次限时答题事件，答错 -4、超时 -10，
+是普通答题的两倍。事件消息由好感插件返回、本插件转发到本群，同时把 `poke_notice.send` 一并交给 `poke()`，
+让好感插件在有人作答或超时后自己发送结算消息。文案来自好感插件文案库的
+`crystelf.poke` / `crystelf.poke.negative` 场景，可通过 `MANTOU_AFFECTION_TEXT_PATH` 扩充到大量文案。
 
-调用链逐级回退：好感插件 `poke()` 接口 → 旧版好感插件接口 → 本地戳一戳词库。
+调用链逐级回退：带 `send` 的 `poke()` → 没有 `send` 参数的老版 `poke()` → 旧版好感插件接口 → 本地戳一戳词库。
 任何一层失败（接口不存在、调用报错、文案为空）都会 `logger.debug` 后落到下一层，不影响戳一戳主流程；
 完全没加载好感插件时一切照旧。
 
-`CRYSTELF_POKE_NEGATIVE_CHANCE`（默认 0.1，即约 10%，0~1）只对**旧版**好感插件生效：
-那类版本没有 `poke()` 接口，由本插件 roll 出负面分支，倒扣 1 点好感并改用
-`crystelf.poke.negative` 场景的文案，取不到文案时只回退本地词库，不会退回正面场景。
+`CRYSTELF_POKE_NEGATIVE_CHANCE`（默认 0.1，即约 10%，0~1）只对**没有 `poke()` 接口的旧版**好感插件生效：
+由本插件 roll 出负面分支，倒扣 1 点好感并改用 `crystelf.poke.negative` 场景的文案，
+取不到文案时只回退本地词库，不会退回正面场景。
 
 ## 与原项目的对应关系
 

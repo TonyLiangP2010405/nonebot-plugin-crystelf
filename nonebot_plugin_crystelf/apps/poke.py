@@ -25,14 +25,23 @@ async def _mantou_poke_text(event: PokeNotifyEvent) -> str | None:
 
 
 async def _mantou_poke_via_api(event: PokeNotifyEvent) -> str | None:
-    """新版好感插件：好感增减、不耐烦累进和回复文案都由它决定。"""
+    """新版好感插件：好感增减、限时答题和回复文案都由它决定。"""
     try:
         import nonebot_plugin_mantou_affection as affection
 
         poke_api = getattr(affection, "poke", None)
         if poke_api is None:
             return None
-        result = await poke_api(event.group_id, event.user_id, nickname="")
+        try:
+            result = await poke_api(
+                event.group_id,
+                event.user_id,
+                nickname="",
+                send=poke_notice.send,
+            )
+        except TypeError:
+            # 旧版 poke 没有 send 参数，去掉它再试一次
+            result = await poke_api(event.group_id, event.user_id, nickname="")
     except Exception as error:
         logger.debug(f"[crystelf] 馒头好感度戳一戳接口调用失败: {error}")
         return None

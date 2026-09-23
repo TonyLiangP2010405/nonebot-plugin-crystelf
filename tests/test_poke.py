@@ -32,24 +32,28 @@ def install_affection_stub(
     negative_text="馒头有点不高兴了",
     positive_text="馒头很开心",
     with_new_api=False,
-    new_api_text="馒头被戳得不想说话",
+    new_api_text="馒头往旁边挪了挪，假装没被戳到。",
     new_api_error=False,
+    new_api_accepts_send=True,
     legacy_error=False,
 ):
     """注入假的馒头好感度插件，记录加减好感、取文案场景与新版接口调用
 
-    with_new_api 为真时模块带上新版 poke 接口（契约：PokeResult(delta, text, count, annoyed)）。
+    with_new_api 为真时模块带上新版 poke 接口（契约：PokeResult(delta, text)，可带 send 参数）。
+    new_api_accepts_send 为假时模拟没有 send 参数的旧版 poke 签名，用于验证重试。
     """
     from nonebot_plugin_crystelf.apps import poke
 
     module = ModuleType("nonebot_plugin_mantou_affection")
     calls = {"add": [], "change": [], "scenes": [], "poke": []}
 
-    async def poke_api(group_id, user_id, *, nickname=""):
-        calls["poke"].append((group_id, user_id, nickname))
+    async def poke_api(group_id, user_id, *, nickname="", **kwargs):
+        calls["poke"].append((group_id, user_id, nickname, kwargs.get("send")))
+        if kwargs and not new_api_accepts_send:
+            raise TypeError("poke() got an unexpected keyword argument 'send'")
         if new_api_error:
             raise RuntimeError("新版戳一戳接口不可用")
-        return SimpleNamespace(delta=-1, text=new_api_text, count=3, annoyed=True)
+        return SimpleNamespace(delta=1, text=new_api_text)
 
     async def add_affection(group_id, user_id, delta, *, nickname="", source=""):
         if legacy_error:
@@ -207,7 +211,7 @@ async def test_new_poke_api_takes_over(monkeypatch):
     text = await poke._mantou_poke_text(poke_event())
 
     assert text == "馒头往旁边挪了挪，假装没被戳到。"
-    assert calls["poke"] == [(10001, 2, "")]
+    assert calls["poke"] == [(10001, 2, "", poke.poke_notice.send)]
     assert calls["add"] == []
     assert calls["change"] == []
     assert calls["scenes"] == []
@@ -222,7 +226,7 @@ async def test_blank_new_poke_text_falls_back_to_legacy(monkeypatch):
     text = await poke._mantou_poke_text(poke_event())
 
     assert text == "馒头很开心"
-    assert calls["poke"] == [(10001, 2, "")]
+    assert calls["poke"] == [(10001, 2, "", poke.poke_notice.send)]
     assert calls["add"] == [(10001, 2, 1, POKE_SOURCE)]
     assert calls["scenes"] == [POSITIVE_SCENE]
 
@@ -237,7 +241,7 @@ async def test_new_poke_api_error_falls_back_to_legacy(monkeypatch):
     text = await poke._mantou_poke_text(poke_event())
 
     assert text == "馒头有点不高兴了"
-    assert calls["poke"] == [(10001, 2, "")]
+    assert calls["poke"] == [(10001, 2, "", poke.poke_notice.send)]
     assert calls["change"] == [(10001, 2, -1, POKE_SOURCE)]
     assert calls["scenes"] == [NEGATIVE_SCENE]
 
@@ -268,6 +272,60 @@ async def test_handler_falls_back_to_words_when_all_apis_fail(monkeypatch):
     await poke.handle_poke(SimpleNamespace(), poke_event())
 
     assert sent == ["词库回复"]
-    assert calls["poke"] == [(10001, 2, "")]
+    assert calls["poke"] == [(10001, 2, "", poke.poke_notice.send)]
     assert calls["add"] == []
     assert calls["change"] == []
+
+
+async def test_new_poke_api_without_send_argument_is_retried(monkeypatch):
+    from nonebot_plugin_crystelf.apps import poke
+
+    use_config(monkeypatch, crystelf_poke_negative_chance=1.0)
+    calls = install_affection_stub(monkeypatch, with_new_api=True, new_api_accepts_send=False)
+
+    text = await poke._mantou_poke_text(poke_event())
+
+    assert text == "馒头往旁边挪了挪，假装没被戳到。"
+    assert calls["poke"] == [
+        (10001, 2, "", poke.poke_notice.send),
+        (10001, 2, "", None),
+    ]
+    assert calls["add"] == []
+    assert calls["change"] == []
+    assert calls["scenes"] == []
+
+
+async def test_new_poke_api_failing_twice_falls_back_to_legacy(monkeypatch):
+    from nonebot_plugin_crystelf.apps import poke
+
+    use_config(monkeypatch, crystelf_poke_negative_chance=1.0)
+    calls = install_affection_stub(
+        monkeypatch,
+        with_new_api=True,
+        new_api_accepts_send=False,
+        new_api_error=True,
+    )
+
+    text = await poke._mantou_poke_text(poke_event())
+
+    assert text == "馒头有点不高兴了"
+    assert calls["poke"] == [
+        (10001, 2, "", poke.poke_notice.send),
+        (10001, 2, "", None),
+    ]
+    assert calls["change"] == [(10001, 2, -1, POKE_SOURCE)]
+    assert calls["scenes"] == [NEGATIVE_SCENE]
+
+
+async def test_answer_event_text_is_sent_as_is(monkeypatch):
+    from nonebot_plugin_crystelf.apps import poke
+
+    event_text = "⚡ 触发随机事件！\n馒头的小本子掉在地上，页角折了一道印子。\n1. 捡起来递回去\n2. 蹲下抚平\n3. 说本子而已\n请在 10 秒内作答"
+    use_config(monkeypatch, crystelf_poke_negative_chance=0.0)
+    calls = install_affection_stub(monkeypatch, with_new_api=True, new_api_text=event_text)
+    sent = patch_send(monkeypatch)
+
+    await poke.handle_poke(SimpleNamespace(), poke_event())
+
+    assert sent == [event_text]
+    assert calls["poke"] == [(10001, 2, "", poke.poke_notice.send)]
